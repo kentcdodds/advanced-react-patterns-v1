@@ -1,0 +1,155 @@
+<body>
+<link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+<link href="index.css" rel="stylesheet">
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+<script src="https://cdn.rawgit.com/kentcdodds/ea2fdfc82f79228a6be641c78dc0e1b9/raw/0f792eb8dfb3bf993bdf50c9656f12090ed344e6/hoist-non-react-statics.umd.js"></script>
+
+<div id="⚛️"></div>
+
+<script type="text/babel">
+const TOGGLED_CONTEXT = '__toggled__'
+class ToggledProvider extends React.Component {
+  static childContextTypes = {
+    [TOGGLED_CONTEXT]:
+      PropTypes.object.isRequired,
+  }
+
+  state = {on: false}
+  toggle = () =>
+    this.setState(
+      ({on}) => ({on: !on}),
+      this.props.onToggle,
+    )
+  getChildContext() {
+    return {
+      [TOGGLED_CONTEXT]: {
+        on: this.state.on,
+        toggle: this.toggle,
+      },
+    }
+  }
+  render() {
+    return this.props.children
+  }
+}
+
+function ToggledRenderer(props, context) {
+  return props.render(context[TOGGLED_CONTEXT])
+}
+ToggledRenderer.contextTypes = {
+  [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
+}
+
+class ToggleInfo extends React.Component {
+  static ExtraInfo = () => (
+    <ToggledRenderer
+      render={toggled => (
+        <div>
+          The button is{' '}
+          {toggled.on ? 'on' : 'off'}.
+        </div>
+      )}
+    />
+  )
+  render() {
+    const {toggled} = this.props
+    return (
+      <ToggledRenderer
+        render={toggled => (
+          <div>
+            <ToggleInfo.ExtraInfo />
+            But you can change that state by
+            clicking the switch or clicking this
+            button:{' '}
+            <button onClick={toggled.toggle}>
+              Toggle
+            </button>
+          </div>
+        )}
+      />
+    )
+  }
+}
+
+function App() {
+  return (
+    <ToggledProvider>
+      <div>
+        This is some stuff that doesn't care about
+        the toggle state
+      </div>
+      <hr />
+      <ToggledRenderer
+        render={toggled => (
+          <div>
+            {toggled.on ? (
+              <div>The button is on</div>
+            ) : (
+              <div>The button is off</div>
+            )}
+            <div>
+              <Switch
+                on={toggled.on}
+                onClick={toggled.toggle}
+              />
+            </div>
+            <hr />
+            <ToggleInfo />
+          </div>
+        )}
+      />
+      <hr />
+      <div>
+        This is more stuff that doesn't care about
+        the toggle state
+      </div>
+    </ToggledProvider>
+  )
+}
+
+/*
+ *
+ *
+ * Below here are irrelevant
+ * implementation details...
+ *
+ *
+ */
+
+function Switch({on, className = '', ...props}) {
+  return (
+    <div className="toggle">
+      <input
+        className="toggle-input"
+        type="checkbox"
+        id="toggler"
+      />
+      <button
+        className={`${className} toggle-btn ${on
+          ? 'toggle-btn-on'
+          : 'toggle-btn-off'}`}
+        {...props}
+      />
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <h2>react-toggled</h2>
+    <App />
+  </div>,
+  document.getElementById('⚛️'),
+)
+</script>
+</body>

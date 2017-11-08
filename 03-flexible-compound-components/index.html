@@ -1,0 +1,118 @@
+<body>
+<link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+<link href="index.css" rel="stylesheet">
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+
+<div id="⚛️"></div>
+
+<script type="text/babel">
+const TOGGLED_CONTEXT = '__toggled__'
+function ToggledOn({children}, context) {
+  const {on} = context[TOGGLED_CONTEXT]
+  return on ? children : null
+}
+ToggledOn.contextTypes = {
+  [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
+}
+function ToggledOff({children}, context) {
+  const {on} = context[TOGGLED_CONTEXT]
+  return on ? null : children
+}
+ToggledOff.contextTypes = {
+  [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
+}
+function ToggledButton(props, context) {
+  const {on, toggle} = context[TOGGLED_CONTEXT]
+  return (
+    <Switch on={on} onClick={toggle} {...props} />
+  )
+}
+ToggledButton.contextTypes = {
+  [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
+}
+class Toggled extends React.Component {
+  static On = ToggledOn
+  static Off = ToggledOff
+  static Button = ToggledButton
+  static childContextTypes = {
+    [TOGGLED_CONTEXT]:
+      PropTypes.object.isRequired,
+  }
+
+  state = {on: false}
+  toggle = () =>
+    this.setState(
+      ({on}) => ({on: !on}),
+      this.props.onToggle,
+    )
+  getChildContext() {
+    return {
+      [TOGGLED_CONTEXT]: {
+        on: this.state.on,
+        toggle: this.toggle,
+      },
+    }
+  }
+  render() {
+    return <div>{this.props.children}</div>
+  }
+}
+
+function App() {
+  return (
+    <Toggled>
+      <Toggled.On>The button is on</Toggled.On>
+      <Toggled.Off>The button is off</Toggled.Off>
+      <div>
+        <Toggled.Button />
+      </div>
+    </Toggled>
+  )
+}
+
+/*
+ *
+ *
+ * Below here are irrelevant
+ * implementation details...
+ *
+ *
+ */
+
+function Switch({on, className = '', ...props}) {
+  return (
+    <div className="toggle">
+      <input
+        className="toggle-input"
+        type="checkbox"
+        id="toggler"
+      />
+      <button
+        className={`${className} toggle-btn ${on
+          ? 'toggle-btn-on'
+          : 'toggle-btn-off'}`}
+        {...props}
+      />
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <h2>react-toggled</h2>
+    <App />
+  </div>,
+  document.getElementById('⚛️'),
+)
+</script>
+</body>

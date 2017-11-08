@@ -1,0 +1,113 @@
+
+<body>
+<link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+<link href="index.css" rel="stylesheet">
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+<script src="https://cdn.rawgit.com/kentcdodds/ea2fdfc82f79228a6be641c78dc0e1b9/raw/0f792eb8dfb3bf993bdf50c9656f12090ed344e6/hoist-non-react-statics.umd.js"></script>
+
+<div id="⚛️"></div>
+
+<script type="text/babel">
+const compose = (...fns) => (...args) =>
+  fns.forEach(fn => fn && fn(...args))
+class Toggled extends React.Component {
+  static defaultProps = {defaultOn: false}
+  initialState = {on: this.props.defaultOn}
+  state = this.initialState
+  reset = () =>
+    this.setState(
+      this.initialState,
+      this.props.onReset,
+    )
+  toggle = () =>
+    this.setState(
+      ({on}) => ({on: !on}),
+      this.props.onToggle,
+    )
+  getTogglerProps = ({
+    onClick,
+    ...remainingProps
+  }) => ({
+    onClick: compose(onClick, this.toggle),
+    'aria-controls': 'target',
+    'aria-expanded': this.state.on,
+    ...remainingProps,
+  })
+  render() {
+    return this.props.render({
+      on: this.state.on,
+      getTogglerProps: this.getTogglerProps,
+      toggle: this.toggle,
+      reset: this.reset,
+    })
+  }
+}
+
+function App() {
+  return (
+    <Toggled
+      defaultOn={true}
+      render={toggled => (
+        <div>
+          {toggled.on ? (
+            <div>The button is on</div>
+          ) : (
+            <div>The button is off</div>
+          )}
+          <Switch
+            {...toggled.getTogglerProps({
+              on: toggled.on,
+            })}
+          />
+        </div>
+      )}
+    />
+  )
+}
+
+/*
+ *
+ *
+ * Below here are irrelevant
+ * implementation details...
+ *
+ *
+ */
+
+function Switch({on, className = '', ...props}) {
+  return (
+    <div className="toggle">
+      <input
+        className="toggle-input"
+        type="checkbox"
+        id="toggler"
+      />
+      <button
+        className={`${className} toggle-btn ${on
+          ? 'toggle-btn-on'
+          : 'toggle-btn-off'}`}
+        {...props}
+      />
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <h2>react-toggled</h2>
+    <App />
+  </div>,
+  document.getElementById('⚛️'),
+)
+</script>
+</body>

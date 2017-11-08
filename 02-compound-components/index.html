@@ -1,0 +1,97 @@
+<body>
+<link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+<link href="index.css" rel="stylesheet">
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+
+<div id="⚛️"></div>
+
+<script type="text/babel">
+function ToggledOn({on, children}) {
+  return on ? children : null
+}
+function ToggledOff({on, children}) {
+  return on ? null : children
+}
+function ToggledButton({on, toggle, ...props}) {
+  return (
+    <Switch on={on} onClick={toggle} {...props} />
+  )
+}
+class Toggled extends React.Component {
+  static On = ToggledOn
+  static Off = ToggledOff
+  static Button = ToggledButton
+  state = {on: false}
+  toggle = () =>
+    this.setState(
+      ({on}) => ({on: !on}),
+      this.props.onToggle,
+    )
+  render() {
+    const children = React.Children.map(
+      this.props.children,
+      child =>
+        React.cloneElement(child, {
+          on: this.state.on,
+          toggle: this.toggle,
+        }),
+    )
+    return <div>{children}</div>
+  }
+}
+
+function App() {
+  return (
+    <Toggled>
+      <Toggled.On>The button is on</Toggled.On>
+      <Toggled.Off>The button is off</Toggled.Off>
+      <Toggled.Button />
+    </Toggled>
+  )
+}
+
+/*
+ *
+ *
+ * Below here are irrelevant
+ * implementation details...
+ *
+ *
+ */
+
+function Switch({on, className = '', ...props}) {
+  return (
+    <div className="toggle">
+      <input
+        className="toggle-input"
+        type="checkbox"
+        id="toggler"
+      />
+      <button
+        className={`${className} toggle-btn ${on
+          ? 'toggle-btn-on'
+          : 'toggle-btn-off'}`}
+        {...props}
+      />
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <h2>react-toggled</h2>
+    <App />
+  </div>,
+  document.getElementById('⚛️'),
+)
+</script>
+</body>

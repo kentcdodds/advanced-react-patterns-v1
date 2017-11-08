@@ -1,0 +1,175 @@
+<body>
+<link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+<link href="index.css" rel="stylesheet">
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+
+<div id="⚛️"></div>
+
+<script type="text/babel">
+const TOGGLED_CONTEXT = '__toggled__'
+const ToggledOn = withToggled(
+  ({children, toggled}) => {
+    const {on} = toggled
+    return on ? children : null
+  },
+)
+const ToggledOff = withToggled(
+  ({children, toggled}) => {
+    const {on} = toggled
+    return on ? null : children
+  },
+)
+const ToggledButton = withToggled(
+  ({toggled, ...props}) => {
+    return (
+      <Switch
+        on={toggled.on}
+        onClick={toggled.toggle}
+        {...props}
+      />
+    )
+  },
+)
+class Toggled extends React.Component {
+  static On = ToggledOn
+  static Off = ToggledOff
+  static Button = ToggledButton
+  static childContextTypes = {
+    [TOGGLED_CONTEXT]:
+      PropTypes.object.isRequired,
+  }
+
+  state = {on: false}
+  toggle = () =>
+    this.setState(
+      ({on}) => ({on: !on}),
+      this.props.onToggle,
+    )
+  getChildContext() {
+    return {
+      [TOGGLED_CONTEXT]: {
+        on: this.state.on,
+        toggle: this.toggle,
+      },
+    }
+  }
+  render() {
+    return <div>{this.props.children}</div>
+  }
+}
+
+function withToggled(Component) {
+  function Wrapper(props, context) {
+    const toggledContext =
+      context[TOGGLED_CONTEXT]
+    const {innerRef, ...remainingProps} = props
+    return (
+      <Component
+        {...remainingProps}
+        toggled={toggledContext}
+        ref={innerRef}
+      />
+    )
+  }
+
+  Wrapper.contextTypes = {
+    [TOGGLED_CONTEXT]:
+      PropTypes.object.isRequired,
+  }
+  Wrapper.displayName = `withToggled(${Component.displayName ||
+    Component.name})`
+  Wrapper.propTypes = {innerRef: PropTypes.func}
+
+  return Wrapper
+}
+
+class ToggleInfo extends React.Component {
+  focus = () => this.button.focus()
+  render() {
+    const {toggled} = this.props
+    return (
+      <div>
+        The button is {toggled.on ? 'on' : 'off'}.
+        But you can change that state by clicking
+        the switch or clicking this button:{' '}
+        <button
+          onClick={toggled.toggle}
+          ref={node => (this.button = node)}
+        >
+          Toggle
+        </button>
+      </div>
+    )
+  }
+}
+
+const WrappedToggleInfo = withToggled(ToggleInfo)
+
+function App() {
+  return (
+    <Toggled>
+      <Toggled.On>The button is on</Toggled.On>
+      <Toggled.Off>The button is off</Toggled.Off>
+      <button
+        onClick={() => this.toggleInfo.focus()}
+      >
+        Focus Toggle Button
+      </button>
+      <div>
+        <Toggled.Button />
+      </div>
+      <hr />
+      <WrappedToggleInfo
+        innerRef={toggleInfo =>
+          (this.toggleInfo = toggleInfo)}
+      />
+    </Toggled>
+  )
+}
+
+/*
+ *
+ *
+ * Below here are irrelevant
+ * implementation details...
+ *
+ *
+ */
+
+function Switch({on, className = '', ...props}) {
+  return (
+    <div className="toggle">
+      <input
+        className="toggle-input"
+        type="checkbox"
+        id="toggler"
+      />
+      <button
+        className={`${className} toggle-btn ${on
+          ? 'toggle-btn-on'
+          : 'toggle-btn-off'}`}
+        {...props}
+      />
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <h2>react-toggled</h2>
+    <App />
+  </div>,
+  document.getElementById('⚛️'),
+)
+</script>
+</body>

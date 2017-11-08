@@ -1,0 +1,118 @@
+
+<body>
+<link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+<link href="index.css" rel="stylesheet">
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+<script src="https://cdn.rawgit.com/kentcdodds/ea2fdfc82f79228a6be641c78dc0e1b9/raw/0f792eb8dfb3bf993bdf50c9656f12090ed344e6/hoist-non-react-statics.umd.js"></script>
+
+<div id="⚛️"></div>
+
+<script type="text/babel">
+class Toggled extends React.Component {
+  state = {on: false}
+  toggle = () =>
+    this.setState(
+      ({on}) => ({on: !on}),
+      this.props.onToggle,
+    )
+  render() {
+    return this.props.render({
+      on: this.state.on,
+      toggle: this.toggle,
+    })
+  }
+}
+
+class ToggleInfo extends React.Component {
+  static ExtraInfo = ({toggled}) => (
+    <div>
+      The button is {toggled.on ? 'on' : 'off'}.
+    </div>
+  )
+  render() {
+    const {toggled} = this.props
+    return (
+      <div>
+        But you can change that state by clicking
+        the switch or clicking this button:{' '}
+        <button onClick={toggled.toggle}>
+          Toggle
+        </button>
+      </div>
+    )
+  }
+}
+
+function App() {
+  return (
+    <Toggled
+      render={toggled => (
+        <div>
+          {toggled.on ? (
+            <div>The button is on</div>
+          ) : (
+            <div>The button is off</div>
+          )}
+          <div>
+            <Switch
+              on={toggled.on}
+              onClick={toggled.toggle}
+            />
+          </div>
+          <hr />
+          <ToggleInfo.ExtraInfo
+            toggled={toggled}
+          />
+          <ToggleInfo toggled={toggled} />
+        </div>
+      )}
+    />
+  )
+}
+
+/*
+ *
+ *
+ * Below here are irrelevant
+ * implementation details...
+ *
+ *
+ */
+
+function Switch({on, className = '', ...props}) {
+  return (
+    <div className="toggle">
+      <input
+        className="toggle-input"
+        type="checkbox"
+        id="toggler"
+      />
+      <button
+        className={`${className} toggle-btn ${on
+          ? 'toggle-btn-on'
+          : 'toggle-btn-off'}`}
+        {...props}
+      />
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <h2>react-toggled</h2>
+    <App />
+  </div>,
+  document.getElementById('⚛️'),
+)
+</script>
+</body>
