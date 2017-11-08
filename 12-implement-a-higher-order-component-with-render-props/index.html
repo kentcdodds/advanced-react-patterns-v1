@@ -5,6 +5,7 @@
 <script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
 <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+<script src="https://cdn.rawgit.com/kentcdodds/ea2fdfc82f79228a6be641c78dc0e1b9/raw/0f792eb8dfb3bf993bdf50c9656f12090ed344e6/hoist-non-react-statics.umd.js"></script>
 
 <div id="⚛️"></div>
 
@@ -42,36 +43,51 @@ ToggledRenderer.contextTypes = {
   [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
 }
 
-class ToggleInfo extends React.Component {
-  static ExtraInfo = () => (
-    <ToggledRenderer
-      render={toggled => (
-        <div>
-          The button is{' '}
-          {toggled.on ? 'on' : 'off'}.
-        </div>
-      )}
-    />
-  )
-  render() {
-    const {toggled} = this.props
+function withToggled(Component) {
+  function Wrapper(props, context) {
+    const {innerRef, ...remainingProps} = props
     return (
       <ToggledRenderer
         render={toggled => (
-          <div>
-            <ToggleInfo.ExtraInfo />
-            But you can change that state by
-            clicking the switch or clicking this
-            button:{' '}
-            <button onClick={toggled.toggle}>
-              Toggle
-            </button>
-          </div>
+          <Component
+            {...remainingProps}
+            toggled={toggled}
+            ref={innerRef}
+          />
         )}
       />
     )
   }
+
+  Wrapper.displayName = `withToggled(${Component.displayName ||
+    Component.name})`
+  Wrapper.propTypes = {innerRef: PropTypes.func}
+  Wrapper.WrappedComponent = Component
+
+  return hoistNonReactStatics(Wrapper, Component)
 }
+
+class ToggleInfo extends React.Component {
+  static ExtraInfo = withToggled(({toggled}) => (
+    <div>
+      The button is {toggled.on ? 'on' : 'off'}.
+    </div>
+  ))
+  render() {
+    const {toggled} = this.props
+    return (
+      <div>
+        But you can change that state by clicking
+        the switch or clicking this button:{' '}
+        <button onClick={toggled.toggle}>
+          Toggle
+        </button>
+      </div>
+    )
+  }
+}
+
+const WrappedToggleInfo = withToggled(ToggleInfo)
 
 function App() {
   return (
@@ -104,7 +120,8 @@ function App() {
         the toggle state
       </div>
       <hr />
-      <ToggleInfo />
+      <WrappedToggleInfo.ExtraInfo />
+      <WrappedToggleInfo />
     </ToggledProvider>
   )
 }
