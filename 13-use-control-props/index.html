@@ -82,6 +82,7 @@ by Mauricio Allende (https://mallendeo.com/)
 <script type="text/babel">
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
+
 class Toggled extends React.Component {
   static defaultProps = {
     defaultOn: false,
