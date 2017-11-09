@@ -1,0 +1,267 @@
+<body>
+<link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+<style>
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+body {
+  font-family: 'Antic Slab', serif;
+}
+hr {
+  width: 100%;
+}
+
+/*
+toggle styles copied and modified from
+https://codepen.io/mallendeo/pen/eLIiG
+by Mauricio Allende (https://mallendeo.com/)
+ */
+.toggle-btn {
+  display: inline-block;
+  outline: 0;
+  width: 4em;
+  height: 2em;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  background: #fbfbfb;
+  border-radius: 2em;
+  padding: 2px;
+  transition: all 0.4s ease;
+  border: 1px solid #e8eae9;
+}
+.toggle-btn:focus::after,
+.toggle-btn:active::after {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 4px 0 rgba(0, 0, 0, 0.08),
+    inset 0px 0px 0px 1.5px #9c9c9c;
+}
+.toggle-btn::after {
+  left: 0;
+  position: relative;
+  display: block;
+  content: '';
+  width: 50%;
+  height: 100%;
+  border-radius: 2em;
+  background: #fbfbfb;
+  transition: all 0.3s
+      cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    padding 0.3s ease, margin 0.3s ease;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 4px 0 rgba(0, 0, 0, 0.08);
+}
+.toggle-btn.toggle-btn-on::after {
+  left: 50%;
+}
+.toggle-btn.toggle-btn-on {
+  background: #86d993;
+}
+.toggle-btn.toggle-btn-on:active {
+  box-shadow: none;
+}
+.toggle-btn.toggle-btn-on:active::after {
+  margin-left: -0.8em;
+}
+.toggle-btn:active::after {
+  padding-right: 0.8em;
+}
+.toggle-input {
+  display: none;
+}
+</style>
+<script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
+<script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+<script src="https://unpkg.com/react-broadcast@0.5.2/umd/react-broadcast.js"></script>
+<script src="https://cdn.rawgit.com/kentcdodds/ea2fdfc82f79228a6be641c78dc0e1b9/raw/0f792eb8dfb3bf993bdf50c9656f12090ed344e6/hoist-non-react-statics.umd.js"></script>
+
+<div id="⚛️"></div>
+
+<script type="text/babel">
+const compose = (...fns) => (...args) =>
+  fns.forEach(fn => fn && fn(...args))
+
+class Toggled extends React.Component {
+  static defaultProps = {
+    defaultOn: false,
+    onReset: () => {},
+    onToggle: () => {},
+  }
+  initialState = {on: this.props.defaultOn}
+  state = this.initialState
+  reset = () => {
+    if (this.isOnControlled()) {
+      this.props.onReset()
+    } else {
+      this.setState(
+        this.initialState,
+        this.props.onReset,
+      )
+    }
+  }
+  toggle = () => {
+    if (this.isOnControlled()) {
+      this.props.onToggle()
+    } else {
+      this.setState(
+        ({on}) => ({on: !on}),
+        this.props.onToggle,
+      )
+    }
+  }
+
+  getTogglerProps = ({
+    onClick,
+    ...remainingProps
+  }) => ({
+    onClick: compose(onClick, this.toggle),
+    'aria-controls': 'target',
+    'aria-expanded': this.state.on,
+    ...remainingProps,
+  })
+  isOnControlled() {
+    return this.props.on !== undefined
+  }
+  render() {
+    return this.props.render({
+      on: this.isOnControlled()
+        ? this.props.on
+        : this.state.on,
+      getTogglerProps: this.getTogglerProps,
+      toggle: this.toggle,
+      reset: this.reset,
+    })
+  }
+}
+
+class ToggledProvider extends React.Component {
+  static channel = '__toggled_channel__'
+  render() {
+    const {
+      children,
+      ...remainingProps
+    } = this.props
+    return (
+      <Toggled
+        {...remainingProps}
+        render={toggled => (
+          <ReactBroadcast.Broadcast
+            channel={ToggledProvider.channel}
+            value={toggled}
+          >
+            {children}
+          </ReactBroadcast.Broadcast>
+        )}
+      />
+    )
+  }
+}
+
+function ToggledController(props, context) {
+  return (
+    <ReactBroadcast.Subscriber
+      channel={ToggledProvider.channel}
+    >
+      {toggled => props.render(toggled)}
+    </ReactBroadcast.Subscriber>
+  )
+}
+
+function withToggled(Component) {
+  function Wrapper(props, context) {
+    const {innerRef, ...remainingProps} = props
+    return (
+      <ToggledController
+        render={toggled => (
+          <Component
+            {...remainingProps}
+            toggled={toggled}
+            ref={innerRef}
+          />
+        )}
+      />
+    )
+  }
+
+  Wrapper.displayName = `withToggled(${Component.displayName ||
+    Component.name})`
+  Wrapper.propTypes = {innerRef: PropTypes.func}
+  Wrapper.WrappedComponent = Component
+
+  return hoistNonReactStatics(Wrapper, Component)
+}
+
+class UpdateBlocker extends React.Component {
+  shouldComponentUpdate() {
+    return false
+  }
+  render() {
+    return this.props.children
+  }
+}
+
+function App() {
+  return (
+    <ToggledProvider>
+      <UpdateBlocker>
+        <ToggledController
+          render={toggled => (
+            <Switch
+              {...toggled.getTogglerProps({
+                on: toggled.on,
+              })}
+            />
+          )}
+        />
+      </UpdateBlocker>
+    </ToggledProvider>
+  )
+}
+
+/*
+ *
+ *
+ * Below here are irrelevant
+ * implementation details...
+ *
+ *
+ */
+
+function Switch({on, className = '', ...props}) {
+  return (
+    <div className="toggle">
+      <input
+        className="toggle-input"
+        type="checkbox"
+        id="toggler"
+      />
+      <button
+        className={`${className} toggle-btn ${on
+          ? 'toggle-btn-on'
+          : 'toggle-btn-off'}`}
+        {...props}
+      />
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <h2>react-toggled</h2>
+    <App />
+  </div>,
+  document.getElementById('⚛️'),
+)
+</script>
+</body>
