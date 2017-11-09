@@ -80,101 +80,135 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
-const TOGGLED_CONTEXT = '__toggled__'
-const ToggledOn = withToggled(
-  ({children, toggled}) => {
-    const {on} = toggled
-    return on ? children : null
-  },
-)
-const ToggledOff = withToggled(
-  ({children, toggled}) => {
-    const {on} = toggled
-    return on ? null : children
-  },
-)
-const ToggledButton = withToggled(
-  ({toggled, ...props}) => {
-    return (
-      <Switch
-        on={toggled.on}
-        onClick={toggled.toggle}
-        aria-controls="target"
-        aria-expanded={on}
-        {...props}
-      />
-    )
-  },
-)
+const compose = (...fns) => (...args) =>
+  fns.forEach(fn => fn && fn(...args))
+
 class Toggled extends React.Component {
-  static On = ToggledOn
-  static Off = ToggledOff
-  static Button = ToggledButton
-  static childContextTypes = {
-    [TOGGLED_CONTEXT]:
-      PropTypes.object.isRequired,
+  static defaultProps = {
+    defaultOn: false,
+    onReset: () => {},
+    onToggle: () => {},
+  }
+  initialState = {on: this.props.defaultOn}
+  state = this.initialState
+  reset = () => {
+    if (this.isOnControlled()) {
+      this.props.onReset()
+    } else {
+      this.setState(
+        this.initialState,
+        this.props.onReset,
+      )
+    }
+  }
+  toggle = () => {
+    if (this.isOnControlled()) {
+      this.props.onToggle()
+    } else {
+      this.setState(
+        ({on}) => ({on: !on}),
+        this.props.onToggle,
+      )
+    }
   }
 
-  state = {on: false}
-  toggle = () =>
-    this.setState(
-      ({on}) => ({on: !on}),
-      this.props.onToggle,
-    )
-  getChildContext() {
-    return {
-      [TOGGLED_CONTEXT]: {
-        on: this.state.on,
-        toggle: this.toggle,
-      },
+  getTogglerProps = ({
+    onClick,
+    ...remainingProps
+  }) => ({
+    onClick: compose(onClick, this.toggle),
+    'aria-controls': 'target',
+    'aria-expanded': this.state.on,
+    ...remainingProps,
+  })
+  isOnControlled() {
+    return this.props.on !== undefined
+  }
+  render() {
+    return this.props.render({
+      on: this.isOnControlled()
+        ? this.props.on
+        : this.state.on,
+      getTogglerProps: this.getTogglerProps,
+      toggle: this.toggle,
+      reset: this.reset,
+    })
+  }
+}
+
+class ToggledProvider extends React.Component {
+  static contextName = '__toggled__'
+  static Renderer = class extends React.Component {
+    static childContextTypes = {
+      [ToggledProvider.contextName]:
+        PropTypes.object.isRequired,
+    }
+    getChildContext() {
+      return {
+        [ToggledProvider.contextName]: this.props
+          .toggled,
+      }
+    }
+    render() {
+      return this.props.children
     }
   }
   render() {
-    return <div>{this.props.children}</div>
-  }
-}
-
-function withToggled(Component) {
-  function Wrapper(props, context) {
-    const toggledContext =
-      context[TOGGLED_CONTEXT]
+    const {
+      children,
+      ...remainingProps
+    } = this.props
     return (
-      <Component
-        {...props}
-        toggled={toggledContext}
+      <Toggled
+        {...remainingProps}
+        render={toggled => (
+          <ToggledProvider.Renderer
+            toggled={toggled}
+            children={children}
+          />
+        )}
       />
     )
   }
-
-  Wrapper.contextTypes = {
-    [TOGGLED_CONTEXT]:
-      PropTypes.object.isRequired,
-  }
-  return Wrapper
 }
 
-const ToggleInfo = withToggled(({toggled}) => (
-  <div>
-    The button is {toggled.on ? 'on' : 'off'}. But
-    you can change that state by clicking the
-    switch or clicking this button:{' '}
-    <button onClick={toggled.toggle}>
-      Toggle
-    </button>
-  </div>
-))
+function ToggledController(props, context) {
+  return props.render(
+    context[ToggledProvider.contextName],
+  )
+}
+ToggledController.contextTypes = {
+  [ToggledProvider.contextName]:
+    PropTypes.object.isRequired,
+}
+
+function ShowMore({number}) {
+  return (
+    <ToggledController
+      render={toggled => (
+        <div>
+          Switch {number}
+          <Switch
+            {...toggled.getTogglerProps({
+              on: toggled.on,
+            })}
+          />
+          {toggled.on ? (
+            <ToggledProvider>
+              <ShowMore number={number + 1} />
+            </ToggledProvider>
+          ) : null}
+        </div>
+      )}
+    />
+  )
+}
 
 function App() {
   return (
-    <Toggled>
-      <Toggled.On>The button is on</Toggled.On>
-      <Toggled.Off>The button is off</Toggled.Off>
-      <div>
-        <Toggled.Button />
-      </div>
-      <hr />
-      <ToggleInfo />
-    </Toggled>
+    <ToggledProvider defaultOn={true}>
+      <ShowMore number={0} />
+    </ToggledProvider>
   )
 }
 

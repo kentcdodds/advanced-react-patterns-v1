@@ -1,6 +1,77 @@
 <body>
 <link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
-<link href="index.css" rel="stylesheet">
+<style>
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+body {
+  font-family: 'Antic Slab', serif;
+}
+hr {
+  width: 100%;
+}
+
+/*
+toggle styles copied and modified from
+https://codepen.io/mallendeo/pen/eLIiG
+by Mauricio Allende (https://mallendeo.com/)
+ */
+.toggle-btn {
+  display: inline-block;
+  outline: 0;
+  width: 4em;
+  height: 2em;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  background: #fbfbfb;
+  border-radius: 2em;
+  padding: 2px;
+  transition: all 0.4s ease;
+  border: 1px solid #e8eae9;
+}
+.toggle-btn:focus::after,
+.toggle-btn:active::after {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 4px 0 rgba(0, 0, 0, 0.08),
+    inset 0px 0px 0px 1.5px #9c9c9c;
+}
+.toggle-btn::after {
+  left: 0;
+  position: relative;
+  display: block;
+  content: '';
+  width: 50%;
+  height: 100%;
+  border-radius: 2em;
+  background: #fbfbfb;
+  transition: all 0.3s
+      cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    padding 0.3s ease, margin 0.3s ease;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1),
+    0 4px 0 rgba(0, 0, 0, 0.08);
+}
+.toggle-btn.toggle-btn-on::after {
+  left: 50%;
+}
+.toggle-btn.toggle-btn-on {
+  background: #86d993;
+}
+.toggle-btn.toggle-btn-on:active {
+  box-shadow: none;
+}
+.toggle-btn.toggle-btn-on:active::after {
+  margin-left: -0.8em;
+}
+.toggle-btn:active::after {
+  padding-right: 0.8em;
+}
+.toggle-input {
+  display: none;
+}
+</style>
 <script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
@@ -12,7 +83,14 @@
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 class Toggled extends React.Component {
-  state = {on: false}
+  static defaultProps = {defaultOn: false}
+  initialState = {on: this.props.defaultOn}
+  state = this.initialState
+  reset = () =>
+    this.setState(
+      this.initialState,
+      this.props.onReset,
+    )
   toggle = () =>
     this.setState(
       ({on}) => ({on: !on}),
@@ -32,6 +110,7 @@ class Toggled extends React.Component {
       on: this.state.on,
       getTogglerProps: this.getTogglerProps,
       toggle: this.toggle,
+      reset: this.reset,
     })
   }
 }
@@ -39,21 +118,13 @@ class Toggled extends React.Component {
 function App() {
   return (
     <Toggled
+      defaultOn={true}
       render={toggled => (
-        <div>
-          {toggled.on ? (
-            <div>The button is on</div>
-          ) : (
-            <div>The button is off</div>
-          )}
-          <Switch
-            {...toggled.getTogglerProps({
-              on: toggled.on,
-              onClick: () =>
-                console.log('clicked'),
-            })}
-          />
-        </div>
+        <Switch
+          {...toggled.getTogglerProps({
+            on: toggled.on,
+          })}
+        />
       )}
     />
   )
