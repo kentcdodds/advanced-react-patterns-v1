@@ -98,13 +98,7 @@ ToggledOff.contextTypes = {
 function ToggledButton(props, context) {
   const {on, toggle} = context[TOGGLED_CONTEXT]
   return (
-    <Switch
-      on={on}
-      onClick={toggle}
-      aria-controls="target"
-      aria-expanded={on}
-      {...props}
-    />
+    <Switch on={on} onClick={toggle} {...props} />
   )
 }
 ToggledButton.contextTypes = {
@@ -171,6 +165,8 @@ function Switch({on, className = '', ...props}) {
         className={`${className} toggle-btn ${on
           ? 'toggle-btn-on'
           : 'toggle-btn-off'}`}
+        aria-controls="target"
+        aria-expanded={on}
         {...props}
       />
     </div>

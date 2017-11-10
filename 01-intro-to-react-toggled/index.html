@@ -89,12 +89,7 @@ class Toggled extends React.Component {
   render() {
     const {on} = this.state
     return (
-      <Switch
-        on={on}
-        onClick={this.toggle}
-        aria-controls="target"
-        aria-expanded={on}
-      />
+      <Switch on={on} onClick={this.toggle} />
     )
   }
 }
@@ -124,6 +119,8 @@ function Switch({on, className = '', ...props}) {
         className={`${className} toggle-btn ${on
           ? 'toggle-btn-on'
           : 'toggle-btn-off'}`}
+        aria-controls="target"
+        aria-expanded={on}
         {...props}
       />
     </div>
