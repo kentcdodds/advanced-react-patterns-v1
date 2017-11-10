@@ -80,29 +80,29 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
-const TOGGLED_CONTEXT = '__toggle__'
+const TOGGLE_CONTEXT = '__toggle__'
 function ToggleOn({children}, context) {
-  const {on} = context[TOGGLED_CONTEXT]
+  const {on} = context[TOGGLE_CONTEXT]
   return on ? children : null
 }
 ToggleOn.contextTypes = {
-  [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
+  [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
 }
 function ToggleOff({children}, context) {
-  const {on} = context[TOGGLED_CONTEXT]
+  const {on} = context[TOGGLE_CONTEXT]
   return on ? null : children
 }
 ToggleOff.contextTypes = {
-  [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
+  [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
 }
 function ToggleButton(props, context) {
-  const {on, toggle} = context[TOGGLED_CONTEXT]
+  const {on, toggle} = context[TOGGLE_CONTEXT]
   return (
     <Switch on={on} onClick={toggle} {...props} />
   )
 }
 ToggleButton.contextTypes = {
-  [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
+  [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
 }
 class Toggle extends React.Component {
   static On = ToggleOn
@@ -110,8 +110,7 @@ class Toggle extends React.Component {
   static Button = ToggleButton
   static defaultProps = {onToggle: () => {}}
   static childContextTypes = {
-    [TOGGLED_CONTEXT]:
-      PropTypes.object.isRequired,
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
   }
 
   state = {on: false}
@@ -122,7 +121,7 @@ class Toggle extends React.Component {
     )
   getChildContext() {
     return {
-      [TOGGLED_CONTEXT]: {
+      [TOGGLE_CONTEXT]: {
         on: this.state.on,
         toggle: this.toggle,
       },
