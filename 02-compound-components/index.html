@@ -94,11 +94,12 @@ class Toggle extends React.Component {
   static On = ToggleOn
   static Off = ToggleOff
   static Button = ToggleButton
+  static defaultProps = {onToggle: () => {}}
   state = {on: false}
   toggle = () =>
     this.setState(
       ({on}) => ({on: !on}),
-      this.props.onToggle,
+      () => this.props.onToggle(this.state.on),
     )
   render() {
     const children = React.Children.map(
@@ -115,7 +116,9 @@ class Toggle extends React.Component {
 
 function App() {
   return (
-    <Toggle>
+    <Toggle
+      onToggle={on => console.log('toggle', on)}
+    >
       <Toggle.On>The button is on</Toggle.On>
       <Toggle.Off>The button is off</Toggle.Off>
       <Toggle.Button />

@@ -108,6 +108,7 @@ class Toggle extends React.Component {
   static On = ToggleOn
   static Off = ToggleOff
   static Button = ToggleButton
+  static defaultProps = {onToggle: () => {}}
   static childContextTypes = {
     [TOGGLED_CONTEXT]:
       PropTypes.object.isRequired,
@@ -117,7 +118,7 @@ class Toggle extends React.Component {
   toggle = () =>
     this.setState(
       ({on}) => ({on: !on}),
-      this.props.onToggle,
+      () => this.props.onToggle(this.state.on),
     )
   getChildContext() {
     return {
@@ -163,7 +164,9 @@ const ToggleInfo = withToggle(({toggle}) => (
 
 function App() {
   return (
-    <Toggle>
+    <Toggle
+      onToggle={on => console.log('toggle', on)}
+    >
       <Toggle.On>The button is on</Toggle.On>
       <Toggle.Off>The button is off</Toggle.Off>
       <div>

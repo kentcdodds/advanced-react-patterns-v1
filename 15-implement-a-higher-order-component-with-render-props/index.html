@@ -87,8 +87,8 @@ const compose = (...fns) => (...args) =>
 class Toggle extends React.Component {
   static defaultProps = {
     defaultOn: false,
-    onReset: () => {},
     onToggle: () => {},
+    onReset: () => {},
   }
   initialState = {on: this.props.defaultOn}
   state = this.initialState
@@ -96,9 +96,8 @@ class Toggle extends React.Component {
     if (this.isOnControlled()) {
       this.props.onReset()
     } else {
-      this.setState(
-        this.initialState,
-        this.props.onReset,
+      this.setState(this.initialState, () =>
+        this.props.onReset(this.state.on),
       )
     }
   }
@@ -108,7 +107,7 @@ class Toggle extends React.Component {
     } else {
       this.setState(
         ({on}) => ({on: !on}),
-        this.props.onToggle,
+        () => this.props.onToggle(this.state.on),
       )
     }
   }

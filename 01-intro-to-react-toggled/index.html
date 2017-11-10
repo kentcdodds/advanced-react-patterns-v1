@@ -80,6 +80,7 @@ by Mauricio Allende (https://mallendeo.com/)
 
 <script type="text/babel">
 class Toggle extends React.Component {
+  static defaultProps = {onToggle: () => {}}
   state = {on: false}
   toggle = () =>
     this.setState(
@@ -97,7 +98,9 @@ class Toggle extends React.Component {
 }
 function App() {
   return (
-    <Toggle onToggle={on => console.log(on)} />
+    <Toggle
+      onToggle={on => console.log('toggle', on)}
+    />
   )
 }
 

@@ -84,11 +84,12 @@ const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
 class Toggle extends React.Component {
+  static defaultProps = {onToggle: () => {}}
   state = {on: false}
   toggle = () =>
     this.setState(
       ({on}) => ({on: !on}),
-      this.props.onToggle,
+      () => this.props.onToggle(this.state.on),
     )
   getTogglerProps = ({
     onClick,
@@ -111,6 +112,7 @@ class Toggle extends React.Component {
 function App() {
   return (
     <Toggle
+      onToggle={on => console.log('toggle', on)}
       render={toggle => (
         <Switch
           {...toggle.getTogglerProps({
