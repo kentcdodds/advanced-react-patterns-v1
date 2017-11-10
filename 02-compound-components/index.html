@@ -79,21 +79,21 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
-function ToggledOn({on, children}) {
+function ToggleOn({on, children}) {
   return on ? children : null
 }
-function ToggledOff({on, children}) {
+function ToggleOff({on, children}) {
   return on ? null : children
 }
-function ToggledButton({on, toggle, ...props}) {
+function ToggleButton({on, toggle, ...props}) {
   return (
     <Switch on={on} onClick={toggle} {...props} />
   )
 }
-class Toggled extends React.Component {
-  static On = ToggledOn
-  static Off = ToggledOff
-  static Button = ToggledButton
+class Toggle extends React.Component {
+  static On = ToggleOn
+  static Off = ToggleOff
+  static Button = ToggleButton
   state = {on: false}
   toggle = () =>
     this.setState(
@@ -115,11 +115,11 @@ class Toggled extends React.Component {
 
 function App() {
   return (
-    <Toggled>
-      <Toggled.On>The button is on</Toggled.On>
-      <Toggled.Off>The button is off</Toggled.Off>
-      <Toggled.Button />
-    </Toggled>
+    <Toggle>
+      <Toggle.On>The button is on</Toggle.On>
+      <Toggle.Off>The button is off</Toggle.Off>
+      <Toggle.Button />
+    </Toggle>
   )
 }
 
@@ -155,13 +155,13 @@ function Switch({on, className = '', ...props}) {
 ReactDOM.render(
   <div
     style={{
+      marginTop: 40,
       display: 'flex',
       justifyContent: 'center',
       flexDirection: 'column',
       textAlign: 'center',
     }}
   >
-    <h2>react-toggled</h2>
     <App />
   </div>,
   document.getElementById('⚛️'),

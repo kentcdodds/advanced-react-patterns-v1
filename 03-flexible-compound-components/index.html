@@ -80,34 +80,34 @@ by Mauricio Allende (https://mallendeo.com/)
 <div id="⚛️"></div>
 
 <script type="text/babel">
-const TOGGLED_CONTEXT = '__toggled__'
-function ToggledOn({children}, context) {
+const TOGGLED_CONTEXT = '__toggle__'
+function ToggleOn({children}, context) {
   const {on} = context[TOGGLED_CONTEXT]
   return on ? children : null
 }
-ToggledOn.contextTypes = {
+ToggleOn.contextTypes = {
   [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
 }
-function ToggledOff({children}, context) {
+function ToggleOff({children}, context) {
   const {on} = context[TOGGLED_CONTEXT]
   return on ? null : children
 }
-ToggledOff.contextTypes = {
+ToggleOff.contextTypes = {
   [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
 }
-function ToggledButton(props, context) {
+function ToggleButton(props, context) {
   const {on, toggle} = context[TOGGLED_CONTEXT]
   return (
     <Switch on={on} onClick={toggle} {...props} />
   )
 }
-ToggledButton.contextTypes = {
+ToggleButton.contextTypes = {
   [TOGGLED_CONTEXT]: PropTypes.object.isRequired,
 }
-class Toggled extends React.Component {
-  static On = ToggledOn
-  static Off = ToggledOff
-  static Button = ToggledButton
+class Toggle extends React.Component {
+  static On = ToggleOn
+  static Off = ToggleOff
+  static Button = ToggleButton
   static childContextTypes = {
     [TOGGLED_CONTEXT]:
       PropTypes.object.isRequired,
@@ -134,13 +134,13 @@ class Toggled extends React.Component {
 
 function App() {
   return (
-    <Toggled>
-      <Toggled.On>The button is on</Toggled.On>
-      <Toggled.Off>The button is off</Toggled.Off>
+    <Toggle>
+      <Toggle.On>The button is on</Toggle.On>
+      <Toggle.Off>The button is off</Toggle.Off>
       <div>
-        <Toggled.Button />
+        <Toggle.Button />
       </div>
-    </Toggled>
+    </Toggle>
   )
 }
 
@@ -176,13 +176,13 @@ function Switch({on, className = '', ...props}) {
 ReactDOM.render(
   <div
     style={{
+      marginTop: 40,
       display: 'flex',
       justifyContent: 'center',
       flexDirection: 'column',
       textAlign: 'center',
     }}
   >
-    <h2>react-toggled</h2>
     <App />
   </div>,
   document.getElementById('⚛️'),

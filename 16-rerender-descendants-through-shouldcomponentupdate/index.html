@@ -85,7 +85,7 @@ by Mauricio Allende (https://mallendeo.com/)
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
-class Toggled extends React.Component {
+class Toggle extends React.Component {
   static defaultProps = {
     defaultOn: false,
     onReset: () => {},
@@ -138,20 +138,20 @@ class Toggled extends React.Component {
   }
 }
 
-class ToggledProvider extends React.Component {
-  static channel = '__toggled_channel__'
+class ToggleProvider extends React.Component {
+  static channel = '__toggle_channel__'
   render() {
     const {
       children,
       ...remainingProps
     } = this.props
     return (
-      <Toggled
+      <Toggle
         {...remainingProps}
-        render={toggled => (
+        render={toggle => (
           <ReactBroadcast.Broadcast
-            channel={ToggledProvider.channel}
-            value={toggled}
+            channel={ToggleProvider.channel}
+            value={toggle}
           >
             {children}
           </ReactBroadcast.Broadcast>
@@ -161,25 +161,25 @@ class ToggledProvider extends React.Component {
   }
 }
 
-function ToggledController(props, context) {
+function ToggleController(props, context) {
   return (
     <ReactBroadcast.Subscriber
-      channel={ToggledProvider.channel}
+      channel={ToggleProvider.channel}
     >
-      {toggled => props.render(toggled)}
+      {toggle => props.render(toggle)}
     </ReactBroadcast.Subscriber>
   )
 }
 
-function withToggled(Component) {
+function withToggle(Component) {
   function Wrapper(props, context) {
     const {innerRef, ...remainingProps} = props
     return (
-      <ToggledController
-        render={toggled => (
+      <ToggleController
+        render={toggle => (
           <Component
             {...remainingProps}
-            toggled={toggled}
+            toggle={toggle}
             ref={innerRef}
           />
         )}
@@ -187,7 +187,7 @@ function withToggled(Component) {
     )
   }
 
-  Wrapper.displayName = `withToggled(${Component.displayName ||
+  Wrapper.displayName = `withToggle(${Component.displayName ||
     Component.name})`
   Wrapper.propTypes = {innerRef: PropTypes.func}
   Wrapper.WrappedComponent = Component
@@ -206,19 +206,19 @@ class UpdateBlocker extends React.Component {
 
 function App() {
   return (
-    <ToggledProvider>
+    <ToggleProvider>
       <UpdateBlocker>
-        <ToggledController
-          render={toggled => (
+        <ToggleController
+          render={toggle => (
             <Switch
-              {...toggled.getTogglerProps({
-                on: toggled.on,
+              {...toggle.getTogglerProps({
+                on: toggle.on,
               })}
             />
           )}
         />
       </UpdateBlocker>
-    </ToggledProvider>
+    </ToggleProvider>
   )
 }
 
@@ -252,13 +252,13 @@ function Switch({on, className = '', ...props}) {
 ReactDOM.render(
   <div
     style={{
+      marginTop: 40,
       display: 'flex',
       justifyContent: 'center',
       flexDirection: 'column',
       textAlign: 'center',
     }}
   >
-    <h2>react-toggled</h2>
     <App />
   </div>,
   document.getElementById('⚛️'),

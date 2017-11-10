@@ -165,7 +165,7 @@ function RenduxController(props, context) {
     <ReactBroadcast.Subscriber
       channel={RenduxProvider.channel}
     >
-      {toggled => props.render(toggled)}
+      {toggle => props.render(toggle)}
     </ReactBroadcast.Subscriber>
   )
 }
@@ -207,7 +207,7 @@ function App() {
   return (
     <RenduxProvider
       initialState={{
-        toggledOn: true,
+        toggleOn: true,
         input: 'hello world',
       }}
       reducer={(state, action) => {
@@ -215,18 +215,18 @@ function App() {
           case 'input_change':
             return {
               ...state,
-              toggledOn:
+              toggleOn:
                 action.value === 'on'
                   ? true
                   : action.value === 'off'
                     ? false
-                    : state.toggledOn,
+                    : state.toggleOn,
               input: action.value,
             }
           case 'toggle':
             return {
               ...state,
-              toggledOn: !state.toggledOn,
+              toggleOn: !state.toggleOn,
             }
           default:
             return state
@@ -253,7 +253,7 @@ function App() {
                 }}
               >
                 <Switch
-                  on={state.toggledOn}
+                  on={state.toggleOn}
                   onClick={() =>
                     dispatch({type: 'toggle'})}
                 />
@@ -302,13 +302,13 @@ function Switch({on, className = '', ...props}) {
 ReactDOM.render(
   <div
     style={{
+      marginTop: 40,
       display: 'flex',
       justifyContent: 'center',
       flexDirection: 'column',
       textAlign: 'center',
     }}
   >
-    <h2>react-toggled</h2>
     <App />
   </div>,
   document.getElementById('⚛️'),

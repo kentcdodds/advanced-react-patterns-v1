@@ -83,7 +83,7 @@ by Mauricio Allende (https://mallendeo.com/)
 const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
-class Toggled extends React.Component {
+class Toggle extends React.Component {
   static defaultProps = {defaultOn: false}
   initialState = {on: this.props.defaultOn}
   state = this.initialState
@@ -118,12 +118,12 @@ class Toggled extends React.Component {
 
 function App() {
   return (
-    <Toggled
+    <Toggle
       defaultOn={true}
-      render={toggled => (
+      render={toggle => (
         <Switch
-          {...toggled.getTogglerProps({
-            on: toggled.on,
+          {...toggle.getTogglerProps({
+            on: toggle.on,
           })}
         />
       )}
@@ -161,13 +161,13 @@ function Switch({on, className = '', ...props}) {
 ReactDOM.render(
   <div
     style={{
+      marginTop: 40,
       display: 'flex',
       justifyContent: 'center',
       flexDirection: 'column',
       textAlign: 'center',
     }}
   >
-    <h2>react-toggled</h2>
     <App />
   </div>,
   document.getElementById('⚛️'),
