@@ -110,8 +110,7 @@ class Toggle extends React.Component {
   static Button = ToggleButton
   static defaultProps = {onToggle: () => {}}
   static childContextTypes = {
-    [TOGGLE_CONTEXT]:
-      PropTypes.object.isRequired,
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
   }
 
   state = {on: false}
@@ -145,21 +144,15 @@ function withToggle(Component) {
   }
 
   Wrapper.contextTypes = {
-    [TOGGLE_CONTEXT]:
-      PropTypes.object.isRequired,
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
   }
   return Wrapper
 }
 
 const ToggleInfo = withToggle(({toggle}) => (
-  <div>
-    The button is {toggle.on ? 'on' : 'off'}. But
-    you can change that state by clicking the
-    switch or clicking this button:{' '}
-    <button onClick={toggle.toggle}>
-      Toggle
-    </button>
-  </div>
+  <button onClick={toggle.toggle}>
+    {toggle.on ? 'on' : 'off'}
+  </button>
 ))
 
 function App() {
@@ -169,9 +162,7 @@ function App() {
     >
       <Toggle.On>The button is on</Toggle.On>
       <Toggle.Off>The button is off</Toggle.Off>
-      <div>
-        <Toggle.Button />
-      </div>
+      <Toggle.Button />
       <hr />
       <ToggleInfo />
     </Toggle>
