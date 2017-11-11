@@ -81,24 +81,18 @@ by Mauricio Allende (https://mallendeo.com/)
 
 <script type="text/babel">
 const TOGGLE_CONTEXT = '__toggle__'
-const ToggleOn = withToggle(
-  ({children, toggle}) => {
-    const {on} = toggle
-    return on ? children : null
-  },
-)
-const ToggleOff = withToggle(
-  ({children, toggle}) => {
-    const {on} = toggle
-    return on ? null : children
-  },
-)
+const ToggleOn = withToggle(({children, on}) => {
+  return on ? children : null
+})
+const ToggleOff = withToggle(({children, on}) => {
+  return on ? null : children
+})
 const ToggleButton = withToggle(
-  ({toggle, ...props}) => {
+  ({on, toggle, ...props}) => {
     return (
       <Switch
-        on={toggle.on}
-        onClick={toggle.toggle}
+        on={on}
+        onClick={toggle}
         {...props}
       />
     )
@@ -136,22 +130,18 @@ function withToggle(Component) {
   function Wrapper(props, context) {
     const toggleContext = context[TOGGLE_CONTEXT]
     return (
-      <Component
-        {...props}
-        toggle={toggleContext}
-      />
+      <Component {...toggleContext} {...props} />
     )
   }
-
   Wrapper.contextTypes = {
     [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
   }
   return Wrapper
 }
 
-const ToggleInfo = withToggle(({toggle}) => (
-  <button onClick={toggle.toggle}>
-    {toggle.on ? 'on' : 'off'}
+const MyToggle = withToggle(({on, toggle}) => (
+  <button onClick={toggle}>
+    {on ? 'on' : 'off'}
   </button>
 ))
 
@@ -164,7 +154,7 @@ function App() {
       <Toggle.Off>The button is off</Toggle.Off>
       <Toggle.Button />
       <hr />
-      <ToggleInfo />
+      <MyToggle />
     </Toggle>
   )
 }
