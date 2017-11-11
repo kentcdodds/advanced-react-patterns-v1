@@ -81,37 +81,27 @@ by Mauricio Allende (https://mallendeo.com/)
 
 <script type="text/babel">
 const TOGGLE_CONTEXT = '__toggle__'
-const ToggleOn = withToggle(
-  ({children, toggle}) => {
-    const {on} = toggle
-    return on ? children : null
-  },
-)
-const ToggleOff = withToggle(
-  ({children, toggle}) => {
-    const {on} = toggle
-    return on ? null : children
-  },
-)
-const ToggleButton = withToggle(
-  ({toggle, ...props}) => {
-    return (
-      <Switch
-        on={toggle.on}
-        onClick={toggle.toggle}
-        {...props}
-      />
-    )
-  },
-)
+const ToggleOn = ({children, toggle: {on}}) => {
+  return on ? children : null
+}
+const ToggleOff = ({children, toggle: {on}}) => {
+  return on ? null : children
+}
+const ToggleButton = ({
+  toggle: {on, toggle},
+  ...props
+}) => {
+  return (
+    <Switch on={on} onClick={toggle} {...props} />
+  )
+}
 class Toggle extends React.Component {
-  static On = ToggleOn
-  static Off = ToggleOff
-  static Button = ToggleButton
+  static On = withToggle(ToggleOn)
+  static Off = withToggle(ToggleOff)
+  static Button = withToggle(ToggleButton)
   static defaultProps = {onToggle: () => {}}
   static childContextTypes = {
-    [TOGGLE_CONTEXT]:
-      PropTypes.object.isRequired,
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
   }
 
   state = {on: false}
@@ -134,73 +124,61 @@ class Toggle extends React.Component {
 }
 
 function withToggle(Component) {
-  function Wrapper(props, context) {
+  function Wrapper(
+    {innerRef, ...props},
+    context,
+  ) {
     const toggleContext = context[TOGGLE_CONTEXT]
-    const {innerRef, ...remainingProps} = props
     return (
       <Component
-        {...remainingProps}
-        toggle={toggleContext}
+        {...props}
         ref={innerRef}
+        toggle={toggleContext}
       />
     )
   }
-
   Wrapper.contextTypes = {
-    [TOGGLE_CONTEXT]:
-      PropTypes.object.isRequired,
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
   }
   Wrapper.displayName = `withToggle(${Component.displayName ||
     Component.name})`
-  Wrapper.propTypes = {innerRef: PropTypes.func}
-
   return Wrapper
 }
 
-class ToggleInfo extends React.Component {
+class MyToggle extends React.Component {
   focus = () => this.button.focus()
   render() {
-    const {toggle} = this.props
+    const {toggle: {on, toggle}} = this.props
     return (
-      <div>
-        The button is {toggle.on ? 'on' : 'off'}.
-        But you can change that state by clicking
-        the switch or clicking this button:{' '}
-        <button
-          onClick={toggle.toggle}
-          ref={node => (this.button = node)}
-        >
-          Toggle
-        </button>
-      </div>
+      <button
+        onClick={toggle}
+        ref={button => (this.button = button)}
+      >
+        {on ? 'on' : 'off'}
+      </button>
     )
   }
 }
+const MyToggleWrapper = withToggle(MyToggle)
 
-const WrappedToggleInfo = withToggle(ToggleInfo)
-
-function App() {
-  return (
-    <Toggle
-      onToggle={on => console.log('toggle', on)}
-    >
-      <Toggle.On>The button is on</Toggle.On>
-      <Toggle.Off>The button is off</Toggle.Off>
-      <button
-        onClick={() => this.toggleInfo.focus()}
+class App extends React.Component {
+  render() {
+    return (
+      <Toggle
+        onToggle={on =>
+          on ? this.myToggle.focus() : null}
       >
-        Focus Toggle Button
-      </button>
-      <div>
+        <Toggle.On>The button is on</Toggle.On>
+        <Toggle.Off>The button is off</Toggle.Off>
         <Toggle.Button />
-      </div>
-      <hr />
-      <WrappedToggleInfo
-        innerRef={toggleInfo =>
-          (this.toggleInfo = toggleInfo)}
-      />
-    </Toggle>
-  )
+        <hr />
+        <MyToggleWrapper
+          innerRef={myToggle =>
+            (this.myToggle = myToggle)}
+        />
+      </Toggle>
+    )
+  }
 }
 
 /*
