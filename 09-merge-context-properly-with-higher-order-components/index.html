@@ -81,37 +81,27 @@ by Mauricio Allende (https://mallendeo.com/)
 
 <script type="text/babel">
 const TOGGLE_CONTEXT = '__toggle__'
-const ToggleOn = withToggle(
-  ({children, toggle}) => {
-    const {on} = toggle
-    return on ? children : null
-  },
-)
-const ToggleOff = withToggle(
-  ({children, toggle}) => {
-    const {on} = toggle
-    return on ? null : children
-  },
-)
-const ToggleButton = withToggle(
-  ({toggle, ...props}) => {
-    return (
-      <Switch
-        on={toggle.on}
-        onClick={toggle.toggle}
-        {...props}
-      />
-    )
-  },
-)
+const ToggleOn = ({children, toggle: {on}}) => {
+  return on ? children : null
+}
+const ToggleOff = ({children, toggle: {on}}) => {
+  return on ? null : children
+}
+const ToggleButton = ({
+  toggle: {on, toggle},
+  ...props
+}) => {
+  return (
+    <Switch on={on} onClick={toggle} {...props} />
+  )
+}
 class Toggle extends React.Component {
-  static On = ToggleOn
-  static Off = ToggleOff
-  static Button = ToggleButton
+  static On = withToggle(ToggleOn)
+  static Off = withToggle(ToggleOff)
+  static Button = withToggle(ToggleButton)
   static defaultProps = {onToggle: () => {}}
   static childContextTypes = {
-    [TOGGLE_CONTEXT]:
-      PropTypes.object.isRequired,
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
   }
 
   state = {on: false}
@@ -133,57 +123,28 @@ class Toggle extends React.Component {
   }
 }
 
-function setMergeableContextTypes(
-  Component,
-  defaultContextTypes,
-) {
-  let userDefinedContextTypes = null
-
-  Object.defineProperty(
-    Component,
-    'contextTypes',
-    {
-      enumerable: true,
-      configurable: true,
-      set(value) {
-        userDefinedContextTypes = value
-      },
-      get() {
-        if (userDefinedContextTypes) {
-          return {
-            ...defaultContextTypes,
-            ...userDefinedContextTypes,
-          }
-        }
-        return defaultContextTypes
-      },
-    },
-  )
-}
-
 function withToggle(Component) {
-  function Wrapper(props, context) {
+  function Wrapper(
+    {innerRef, ...props},
+    context,
+  ) {
     const toggleContext = context[TOGGLE_CONTEXT]
-    const {innerRef, ...remainingProps} = props
     return (
       <Component
-        {...remainingProps}
-        toggle={toggleContext}
+        {...props}
         ref={innerRef}
+        toggle={toggleContext}
       />
     )
   }
 
-  setMergeableContextTypes(Wrapper, {
-    [TOGGLE_CONTEXT]:
-      PropTypes.object.isRequired,
-  })
+  Wrapper.contextTypes = {
+    [TOGGLE_CONTEXT]: PropTypes.object.isRequired,
+  }
 
   Wrapper.displayName = `withToggle(${Component.displayName ||
     Component.name})`
-  Wrapper.propTypes = {innerRef: PropTypes.func}
   Wrapper.WrappedComponent = Component
-
   return Wrapper
 }
 
@@ -203,53 +164,23 @@ class LanguageProvider extends React.Component {
   }
 }
 
-function withLanguage(Component) {
-  function Wrapper(props, context) {
-    const languageContext =
-      context[LANGUAGE_CONTEXT]
-    const {innerRef, ...remainingProps} = props
-    return (
-      <Component
-        {...remainingProps}
-        language={languageContext}
-        ref={innerRef}
-      />
-    )
-  }
-
-  setMergeableContextTypes(Wrapper, {
-    [LANGUAGE_CONTEXT]:
-      PropTypes.object.isRequired,
-  })
-  Wrapper.displayName = `withLanguage(${Component.displayName ||
-    Component.name})`
-  Wrapper.propTypes = {innerRef: PropTypes.func}
-  Wrapper.WrappedComponent = Component
-
-  return Wrapper
-}
-
-class ToggleInfo extends React.Component {
-  render() {
-    const {toggle, language} = this.props
-    return (
-      <div>
-        The button is {toggle.on ? 'on' : 'off'}.
-        But you can change that state by clicking
-        the switch or clicking this button:{' '}
-        <button onClick={toggle.toggle}>
-          Toggle
-        </button>
-        <div>Oh, and the language code is </div>
-        {language.code}
-      </div>
-    )
-  }
-}
-
-const WrappedToggleInfoWithLanguage = withLanguage(
-  withToggle(ToggleInfo),
+const MyToggle = ({
+  language: {code},
+  toggle: {on, toggle},
+}) => (
+  <div>
+    <button onClick={toggle}>
+      {on ? 'on' : 'off'}
+    </button>
+    <br />
+    And the code is {code}
+  </div>
 )
+
+const MyToggleWrapper = withToggle(MyToggle)
+MyToggleWrapper.contextTypes = {
+  [LANGUAGE_CONTEXT]: PropTypes.object.isRequired,
+}
 
 function App() {
   return (
@@ -259,11 +190,9 @@ function App() {
       >
         <Toggle.On>The button is on</Toggle.On>
         <Toggle.Off>The button is off</Toggle.Off>
-        <div>
-          <Toggle.Button />
-        </div>
+        <Toggle.Button />
         <hr />
-        <WrappedToggleInfoWithLanguage />
+        <MyToggleWrapper />
       </Toggle>
     </LanguageProvider>
   )
