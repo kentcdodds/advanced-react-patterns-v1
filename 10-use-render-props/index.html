@@ -74,7 +74,6 @@ by Mauricio Allende (https://mallendeo.com/)
 </style>
 <script src="https://unpkg.com/react@16.0.0/umd/react.development.js"></script>
 <script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
 <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
 
 <div id="⚛️"></div>
@@ -100,11 +99,11 @@ function App() {
   return (
     <Toggle
       onToggle={on => console.log('toggle', on)}
-      render={toggle => (
-        <Switch
-          on={toggle.on}
-          onClick={toggle.toggle}
-        />
+      render={({on, toggle}) => (
+        <div>
+          <Switch on={on} onClick={toggle} />
+          <div>{on ? 'on' : 'off'}</div>
+        </div>
       )}
     />
   )
