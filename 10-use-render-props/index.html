@@ -95,14 +95,26 @@ class Toggle extends React.Component {
   }
 }
 
+function MyToggle({on, toggle}) {
+  return (
+    <button onClick={toggle}>
+      {on ? 'on' : 'off'}
+    </button>
+  )
+}
+
 function App() {
   return (
     <Toggle
       onToggle={on => console.log('toggle', on)}
       render={({on, toggle}) => (
         <div>
+          {on
+            ? 'The button is on'
+            : 'The button is off'}
           <Switch on={on} onClick={toggle} />
-          <div>{on ? 'on' : 'off'}</div>
+          <hr />
+          <MyToggle on={on} toggle={toggle} />
         </div>
       )}
     />
