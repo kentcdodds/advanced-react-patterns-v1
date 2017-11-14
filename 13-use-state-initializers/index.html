@@ -110,9 +110,9 @@ class Toggle extends React.Component {
   render() {
     return this.props.render({
       on: this.state.on,
-      getTogglerProps: this.getTogglerProps,
       toggle: this.toggle,
       reset: this.reset,
+      getTogglerProps: this.getTogglerProps,
     })
   }
 }
@@ -124,11 +124,17 @@ function App() {
       onToggle={on => console.log('toggle', on)}
       onReset={on => console.log('reset', on)}
       render={toggle => (
-        <Switch
-          {...toggle.getTogglerProps({
-            on: toggle.on,
-          })}
-        />
+        <div>
+          <Switch
+            {...toggle.getTogglerProps({
+              on: toggle.on,
+            })}
+          />
+          <hr />
+          <button onClick={() => toggle.reset()}>
+            Reset
+          </button>
+        </div>
       )}
     />
   )
