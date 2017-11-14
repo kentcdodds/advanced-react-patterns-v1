@@ -111,13 +111,12 @@ class Toggle extends React.Component {
     }
   }
 
-  getTogglerProps = ({
-    onClick,
-    ...remainingProps
-  }) => ({
+  getTogglerProps = (
+    {onClick, ...props} = {},
+  ) => ({
     onClick: compose(onClick, this.toggle),
     'aria-expanded': this.state.on,
-    ...remainingProps,
+    ...props,
   })
   isOnControlled() {
     return this.props.on !== undefined
@@ -134,80 +133,51 @@ class Toggle extends React.Component {
   }
 }
 
-class ToggleProvider extends React.Component {
-  static contextName = '__toggle__'
-  static Renderer = class extends React.Component {
-    static childContextTypes = {
-      [ToggleProvider.contextName]:
-        PropTypes.object.isRequired,
-    }
-    getChildContext() {
-      return {
-        [ToggleProvider.contextName]: this.props
-          .toggle,
-      }
-    }
-    render() {
-      return this.props.children
-    }
+class App extends React.Component {
+  initialState = {timesClicked: 0, on: false}
+  state = this.initialState
+  handleToggle = () => {
+    this.setState(({timesClicked, on}) => ({
+      timesClicked: timesClicked + 1,
+      on: timesClicked >= 4 ? false : !on,
+    }))
   }
+  handleReset = () => {
+    this.setState(this.initialState)
+  }
+
   render() {
-    const {
-      children,
-      ...remainingProps
-    } = this.props
+    const {timesClicked, on} = this.state
     return (
       <Toggle
-        {...remainingProps}
+        on={on}
+        onToggle={this.handleToggle}
+        onReset={this.handleReset}
         render={toggle => (
-          <ToggleProvider.Renderer
-            toggle={toggle}
-            children={children}
-          />
+          <div>
+            <Switch
+              {...toggle.getTogglerProps({
+                on: toggle.on,
+              })}
+            />
+            {timesClicked > 4 ? (
+              <div>
+                Whoa, you've clicked too much!
+                <br />
+                <button onClick={toggle.reset}>
+                  reset
+                </button>
+              </div>
+            ) : timesClicked > 0 ? (
+              <div>
+                Click count: {timesClicked}
+              </div>
+            ) : null}
+          </div>
         )}
       />
     )
   }
-}
-
-function ToggleController(props, context) {
-  return props.render(
-    context[ToggleProvider.contextName],
-  )
-}
-ToggleController.contextTypes = {
-  [ToggleProvider.contextName]:
-    PropTypes.object.isRequired,
-}
-
-function ShowMore({number}) {
-  return (
-    <ToggleController
-      render={toggle => (
-        <div>
-          Switch {number}
-          <Switch
-            {...toggle.getTogglerProps({
-              on: toggle.on,
-            })}
-          />
-          {toggle.on ? (
-            <ToggleProvider>
-              <ShowMore number={number + 1} />
-            </ToggleProvider>
-          ) : null}
-        </div>
-      )}
-    />
-  )
-}
-
-function App() {
-  return (
-    <ToggleProvider defaultOn={true}>
-      <ShowMore number={0} />
-    </ToggleProvider>
-  )
 }
 
 /*

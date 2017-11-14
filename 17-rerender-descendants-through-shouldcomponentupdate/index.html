@@ -76,6 +76,8 @@ by Mauricio Allende (https://mallendeo.com/)
 <script src="https://unpkg.com/react-dom@16.0.0/umd/react-dom.development.js"></script>
 <script src="https://unpkg.com/prop-types@15.6.0/prop-types.js"></script>
 <script src="https://unpkg.com/babel-standalone@6.26.0/babel.js"></script>
+<script src="https://unpkg.com/react-broadcast@0.5.2/umd/react-broadcast.js"></script>
+<script src="https://cdn.rawgit.com/kentcdodds/ea2fdfc82f79228a6be641c78dc0e1b9/raw/0f792eb8dfb3bf993bdf50c9656f12090ed344e6/hoist-non-react-statics.umd.js"></script>
 
 <div id="⚛️"></div>
 
@@ -84,43 +86,136 @@ const compose = (...fns) => (...args) =>
   fns.forEach(fn => fn && fn(...args))
 
 class Toggle extends React.Component {
-  static defaultProps = {onToggle: () => {}}
-  state = {on: false}
-  toggle = () =>
-    this.setState(
-      ({on}) => ({on: !on}),
-      () => this.props.onToggle(this.state.on),
-    )
-  getTogglerProps = ({
-    onClick,
-    ...remainingProps
-  }) => ({
+  static defaultProps = {
+    defaultOn: false,
+    onToggle: () => {},
+    onReset: () => {},
+  }
+  initialState = {on: this.props.defaultOn}
+  state = this.initialState
+  reset = () => {
+    if (this.isOnControlled()) {
+      this.props.onReset()
+    } else {
+      this.setState(this.initialState, () =>
+        this.props.onReset(this.state.on),
+      )
+    }
+  }
+  toggle = () => {
+    if (this.isOnControlled()) {
+      this.props.onToggle()
+    } else {
+      this.setState(
+        ({on}) => ({on: !on}),
+        () => this.props.onToggle(this.state.on),
+      )
+    }
+  }
+
+  getTogglerProps = (
+    {onClick, ...props} = {},
+  ) => ({
     onClick: compose(onClick, this.toggle),
     'aria-expanded': this.state.on,
-    ...remainingProps,
+    ...props,
   })
+  isOnControlled() {
+    return this.props.on !== undefined
+  }
   render() {
     return this.props.render({
-      on: this.state.on,
+      on: this.isOnControlled()
+        ? this.props.on
+        : this.state.on,
       getTogglerProps: this.getTogglerProps,
       toggle: this.toggle,
+      reset: this.reset,
     })
+  }
+}
+
+class ToggleProvider extends React.Component {
+  static channel = '__toggle_channel__'
+  render() {
+    const {
+      children,
+      ...remainingProps
+    } = this.props
+    return (
+      <Toggle
+        {...remainingProps}
+        render={toggle => (
+          <ReactBroadcast.Broadcast
+            channel={ToggleProvider.channel}
+            value={toggle}
+          >
+            {children}
+          </ReactBroadcast.Broadcast>
+        )}
+      />
+    )
+  }
+}
+
+function ToggleController(props, context) {
+  return (
+    <ReactBroadcast.Subscriber
+      channel={ToggleProvider.channel}
+    >
+      {toggle => props.render(toggle)}
+    </ReactBroadcast.Subscriber>
+  )
+}
+
+function withToggle(Component) {
+  function Wrapper(props, context) {
+    const {innerRef, ...remainingProps} = props
+    return (
+      <ToggleController
+        render={toggle => (
+          <Component
+            {...remainingProps}
+            toggle={toggle}
+            ref={innerRef}
+          />
+        )}
+      />
+    )
+  }
+
+  Wrapper.displayName = `withToggle(${Component.displayName ||
+    Component.name})`
+  Wrapper.propTypes = {innerRef: PropTypes.func}
+  Wrapper.WrappedComponent = Component
+
+  return hoistNonReactStatics(Wrapper, Component)
+}
+
+class UpdateBlocker extends React.Component {
+  shouldComponentUpdate() {
+    return false
+  }
+  render() {
+    return this.props.children
   }
 }
 
 function App() {
   return (
-    <Toggle
-      onToggle={on => console.log('toggle', on)}
-      render={toggle => (
-        <Switch
-          {...toggle.getTogglerProps({
-            on: toggle.on,
-            onClick: () => console.log('clicked'),
-          })}
+    <ToggleProvider>
+      <UpdateBlocker>
+        <ToggleController
+          render={toggle => (
+            <Switch
+              {...toggle.getTogglerProps({
+                on: toggle.on,
+              })}
+            />
+          )}
         />
-      )}
-    />
+      </UpdateBlocker>
+    </ToggleProvider>
   )
 }
 
