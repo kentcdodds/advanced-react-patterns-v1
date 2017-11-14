@@ -116,7 +116,6 @@ class Toggle extends React.Component {
     ...remainingProps
   }) => ({
     onClick: compose(onClick, this.toggle),
-    'aria-controls': 'target',
     'aria-expanded': this.state.on,
     ...remainingProps,
   })
