@@ -93,7 +93,7 @@ class Toggle extends React.Component {
   state = this.initialState
   reset = () => {
     if (this.isOnControlled()) {
-      this.props.onReset()
+      this.props.onReset(!this.props.on)
     } else {
       this.setState(this.initialState, () =>
         this.props.onReset(this.state.on),
@@ -102,7 +102,7 @@ class Toggle extends React.Component {
   }
   toggle = () => {
     if (this.isOnControlled()) {
-      this.props.onToggle()
+      this.props.onToggle(!this.props.on)
     } else {
       this.setState(
         ({on}) => ({on: !on}),
@@ -110,7 +110,6 @@ class Toggle extends React.Component {
       )
     }
   }
-
   getTogglerProps = (
     {onClick, ...props} = {},
   ) => ({
@@ -126,9 +125,9 @@ class Toggle extends React.Component {
       on: this.isOnControlled()
         ? this.props.on
         : this.state.on,
-      getTogglerProps: this.getTogglerProps,
       toggle: this.toggle,
       reset: this.reset,
+      getTogglerProps: this.getTogglerProps,
     })
   }
 }
@@ -220,5 +219,53 @@ ReactDOM.render(
   </div>,
   document.getElementById('⚛️'),
 )
+</script>
+<script type="text/babel">
+class MyUpperCaseInput extends React.Component {
+  state = {upperValue: '', lowerValue: ''}
+  handleChange = e =>
+    this.setState({
+      upperValue: e.target.value.toUpperCase(),
+      lowerValue: e.target.value.toLowerCase(),
+    })
+  render() {
+    const {upperValue, lowerValue} = this.state
+    return (
+      <div>
+        <label>
+          Upper:
+          <input
+            value={upperValue}
+            onChange={this.handleChange}
+          />
+        </label>
+        <hr />
+        <label>
+          Lower:
+          <input
+            value={lowerValue}
+            onChange={this.handleChange}
+          />
+        </label>
+      </div>
+    )
+  }
+}
+/*
+ReactDOM.render(
+  <div
+    style={{
+      marginTop: 40,
+      display: 'flex',
+      justifyContent: 'center',
+      flexDirection: 'column',
+      textAlign: 'center',
+    }}
+  >
+    <MyUpperCaseInput />
+  </div>,
+  document.getElementById('⚛️'),
+)
+*/
 </script>
 </body>
