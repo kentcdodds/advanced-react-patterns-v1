@@ -94,7 +94,7 @@ class Toggle extends React.Component {
   state = this.initialState
   reset = () => {
     if (this.isOnControlled()) {
-      this.props.onReset()
+      this.props.onReset(!this.props.on)
     } else {
       this.setState(this.initialState, () =>
         this.props.onReset(this.state.on),
@@ -103,7 +103,7 @@ class Toggle extends React.Component {
   }
   toggle = () => {
     if (this.isOnControlled()) {
-      this.props.onToggle()
+      this.props.onToggle(!this.props.on)
     } else {
       this.setState(
         ({on}) => ({on: !on}),
@@ -111,7 +111,6 @@ class Toggle extends React.Component {
       )
     }
   }
-
   getTogglerProps = (
     {onClick, ...props} = {},
   ) => ({
@@ -127,9 +126,9 @@ class Toggle extends React.Component {
       on: this.isOnControlled()
         ? this.props.on
         : this.state.on,
-      getTogglerProps: this.getTogglerProps,
       toggle: this.toggle,
       reset: this.reset,
+      getTogglerProps: this.getTogglerProps,
     })
   }
 }
@@ -170,12 +169,12 @@ class ToggleProvider extends React.Component {
   }
 }
 
-function ToggleController(props, context) {
+function ConnectedToggle(props, context) {
   return props.render(
     context[ToggleProvider.contextName],
   )
 }
-ToggleController.contextTypes = {
+ConnectedToggle.contextTypes = {
   [ToggleProvider.contextName]:
     PropTypes.object.isRequired,
 }
@@ -184,7 +183,7 @@ function withToggle(Component) {
   function Wrapper(props, context) {
     const {innerRef, ...remainingProps} = props
     return (
-      <ToggleController
+      <ConnectedToggle
         render={toggle => (
           <Component
             {...remainingProps}
@@ -195,37 +194,27 @@ function withToggle(Component) {
       />
     )
   }
-
   Wrapper.displayName = `withToggle(${Component.displayName ||
     Component.name})`
   Wrapper.propTypes = {innerRef: PropTypes.func}
   Wrapper.WrappedComponent = Component
-
   return hoistNonReactStatics(Wrapper, Component)
 }
 
-const ShowMore = withToggle(
-  ({number, toggle}) => (
-    <div>
-      Switch {number}
-      <Switch
-        {...toggle.getTogglerProps({
-          on: toggle.on,
-        })}
-      />
-      {toggle.on ? (
-        <ToggleProvider>
-          <ShowMore number={number + 1} />
-        </ToggleProvider>
-      ) : null}
-    </div>
-  ),
+const Subtitle = withToggle(
+  ({toggle}) =>
+    toggle.on
+      ? '👩‍🏫 👉 🕶'
+      : 'Teachers are awesome',
 )
 
 function App() {
   return (
-    <ToggleProvider defaultOn={true}>
-      <ShowMore number={0} />
+    <ToggleProvider>
+      <div>
+        <Header />
+        <Post />
+      </div>
     </ToggleProvider>
   )
 }
@@ -238,6 +227,140 @@ function App() {
  *
  *
  */
+
+function Nav() {
+  return (
+    <ConnectedToggle
+      render={toggle => (
+        <nav style={{flex: 1}}>
+          <ul
+            style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              listStyle: 'none',
+              paddingLeft: '0',
+            }}
+          >
+            <li>
+              <a href="index.html">
+                {toggle.on ? '🏡' : 'Home'}
+              </a>
+            </li>
+            <li>
+              <a href="/about/">
+                {toggle.on ? '❓' : 'About'}
+              </a>
+            </li>
+            <li>
+              <a href="/blog/">
+                {toggle.on ? '📖' : 'Blog'}
+              </a>
+            </li>
+          </ul>
+        </nav>
+      )}
+    />
+  )
+}
+
+function NavSwitch() {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        textAlign: 'center',
+      }}
+    >
+      <div>
+        <ConnectedToggle
+          render={toggle =>
+            toggle.on ? '🦄' : 'Enable Emoji'}
+        />
+      </div>
+      <ConnectedToggle
+        render={toggle => (
+          <Switch
+            {...toggle.getTogglerProps({
+              on: toggle.on,
+            })}
+          />
+        )}
+      />
+    </div>
+  )
+}
+
+function Header() {
+  return (
+    <div>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          alignItems: 'center',
+        }}
+      >
+        <Nav />
+        <NavSwitch />
+      </div>
+    </div>
+  )
+}
+
+function Title() {
+  return (
+    <div>
+      <h1>
+        <ConnectedToggle
+          render={toggle =>
+            `Who is ${toggle.on
+              ? '🕶❓'
+              : 'awesome?'}`}
+        />
+      </h1>
+      <Subtitle />
+    </div>
+  )
+}
+
+function Article() {
+  return (
+    <div>
+      <ConnectedToggle
+        render={toggle =>
+          [
+            'Once, I was in',
+            toggle.on ? '🏫‍' : 'school',
+            'when I',
+            toggle.on ? '🤔' : 'realized',
+            'something...',
+          ].join(' ')}
+      />
+      <hr />
+      <ConnectedToggle
+        render={toggle =>
+          [
+            'Without',
+            toggle.on ? '👩‍🏫' : 'teachers',
+            `I wouldn't know anything so`,
+            toggle.on ? '🙏' : 'thanks',
+            toggle.on ? '👩‍🏫❗️' : 'teachers!',
+          ].join(' ')}
+      />
+    </div>
+  )
+}
+
+function Post() {
+  return (
+    <div>
+      <Title />
+      <Article />
+    </div>
+  )
+}
 
 function Switch({on, className = '', ...props}) {
   return (
