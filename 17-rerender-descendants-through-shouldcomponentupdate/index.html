@@ -183,12 +183,10 @@ function withToggle(Component) {
       />
     )
   }
-
   Wrapper.displayName = `withToggle(${Component.displayName ||
     Component.name})`
   Wrapper.propTypes = {innerRef: PropTypes.func}
   Wrapper.WrappedComponent = Component
-
   return hoistNonReactStatics(Wrapper, Component)
 }
 
@@ -204,12 +202,12 @@ class UpdateBlocker extends React.Component {
 function App() {
   return (
     <ToggleProvider>
-      <UpdateBlocker>
-        <div>
-          <Header />
+      <div>
+        <Header />
+        <UpdateBlocker>
           <Post />
-        </div>
-      </UpdateBlocker>
+        </UpdateBlocker>
+      </div>
     </ToggleProvider>
   )
 }
