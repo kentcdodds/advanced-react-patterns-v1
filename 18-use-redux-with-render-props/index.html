@@ -14,11 +14,11 @@ hr {
 }
 
 /*
-toggle styles copied and modified from
+rendux styles copied and modified from
 https://codepen.io/mallendeo/pen/eLIiG
 by Mauricio Allende (https://mallendeo.com/)
  */
-.toggle-btn {
+.rendux-btn {
   display: inline-block;
   outline: 0;
   width: 4em;
@@ -32,13 +32,13 @@ by Mauricio Allende (https://mallendeo.com/)
   transition: all 0.4s ease;
   border: 1px solid #e8eae9;
 }
-.toggle-btn:focus::after,
-.toggle-btn:active::after {
+.rendux-btn:focus::after,
+.rendux-btn:active::after {
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1),
     0 4px 0 rgba(0, 0, 0, 0.08),
     inset 0px 0px 0px 1.5px #9c9c9c;
 }
-.toggle-btn::after {
+.rendux-btn::after {
   left: 0;
   position: relative;
   display: block;
@@ -53,22 +53,22 @@ by Mauricio Allende (https://mallendeo.com/)
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1),
     0 4px 0 rgba(0, 0, 0, 0.08);
 }
-.toggle-btn.toggle-btn-on::after {
+.rendux-btn.rendux-btn-on::after {
   left: 50%;
 }
-.toggle-btn.toggle-btn-on {
+.rendux-btn.rendux-btn-on {
   background: #86d993;
 }
-.toggle-btn.toggle-btn-on:active {
+.rendux-btn.rendux-btn-on:active {
   box-shadow: none;
 }
-.toggle-btn.toggle-btn-on:active::after {
+.rendux-btn.rendux-btn-on:active::after {
   margin-left: -0.8em;
 }
-.toggle-btn:active::after {
+.rendux-btn:active::after {
   padding-right: 0.8em;
 }
-.toggle-input {
+.rendux-input {
   display: none;
 }
 </style>
@@ -89,8 +89,9 @@ const compose = (...fns) => (...args) =>
 class Rendux extends React.Component {
   static defaultProps = {
     initialState: {},
+    onUpdate: () => {},
     onReset: () => {},
-    onToggle: () => {},
+    reducer: state => state,
   }
   initialState = this.props.initialState
   rootReducer = (state, action) => {
@@ -103,26 +104,24 @@ class Rendux extends React.Component {
     this.rootReducer,
     this.initialState,
   )
-  state = this.store.getState()
+  state = this.initialState
   reset = () => {
-    if (!this.isStateControlled()) {
+    if (this.isStateControlled()) {
+      this.props.onReset(this.initialState)
+    } else {
       this.store.dispatch({
         type: '__RENDUX_RESET__',
       })
     }
-    this.props.onReset()
   }
   componentDidMount() {
-    this.unsubscribe = this.store.subscribe(
-      () => {
-        this.setState(this.store.getState())
-      },
+    this.unsubscribe = this.store.subscribe(() =>
+      this.setState(this.store.getState()),
     )
   }
   componentWillUnmount() {
     this.unsubscribe()
   }
-
   isStateControlled() {
     return this.props.state !== undefined
   }
@@ -147,10 +146,10 @@ class RenduxProvider extends React.Component {
     return (
       <Rendux
         {...remainingProps}
-        render={state => (
+        render={rendux => (
           <ReactBroadcast.Broadcast
             channel={RenduxProvider.channel}
-            value={state}
+            value={rendux}
           >
             {children}
           </ReactBroadcast.Broadcast>
@@ -160,12 +159,12 @@ class RenduxProvider extends React.Component {
   }
 }
 
-function RenduxController(props, context) {
+function ConnectedRendux(props, context) {
   return (
     <ReactBroadcast.Subscriber
       channel={RenduxProvider.channel}
     >
-      {toggle => props.render(toggle)}
+      {rendux => props.render(rendux)}
     </ReactBroadcast.Subscriber>
   )
 }
@@ -174,23 +173,21 @@ function withRendux(Component) {
   function Wrapper(props, context) {
     const {innerRef, ...remainingProps} = props
     return (
-      <RenduxController
-        render={state => (
+      <ConnectedRendux
+        render={rendux => (
           <Component
             {...remainingProps}
-            state={state}
+            rendux={rendux}
             ref={innerRef}
           />
         )}
       />
     )
   }
-
   Wrapper.displayName = `withRendux(${Component.displayName ||
     Component.name})`
   Wrapper.propTypes = {innerRef: PropTypes.func}
   Wrapper.WrappedComponent = Component
-
   return hoistNonReactStatics(Wrapper, Component)
 }
 
@@ -203,30 +200,98 @@ class UpdateBlocker extends React.Component {
   }
 }
 
+function MyInput() {
+  return (
+    <ConnectedRendux
+      render={rendux => (
+        <input
+          defaultValue={
+            rendux.state.on ? 'on' : 'off'
+          }
+          placeholder="Type 'off' or 'on'"
+          onChange={event => {
+            if (event.target.value === 'on') {
+              rendux.dispatch({
+                type: 'toggle',
+                value: true,
+              })
+            } else if (
+              event.target.value === 'off'
+            ) {
+              rendux.dispatch({
+                type: 'toggle',
+                value: false,
+              })
+            }
+            rendux.dispatch({
+              type: 'input_change',
+              value: event.target.value,
+            })
+          }}
+        />
+      )}
+    />
+  )
+}
+
+function MySwitch() {
+  return (
+    <ConnectedRendux
+      render={rendux => (
+        <div
+          style={{
+            marginTop: 20,
+            marginBottom: 20,
+          }}
+        >
+          <Switch
+            on={rendux.state.on}
+            onClick={() =>
+              rendux.dispatch({
+                type: 'toggle',
+                value: !rendux.state.on,
+              })}
+          />
+        </div>
+      )}
+    />
+  )
+}
+
+function StatePrinter() {
+  return (
+    <ConnectedRendux
+      render={rendux => (
+        <div style={{textAlign: 'left'}}>
+          state:
+          <pre>
+            {JSON.stringify(
+              rendux.state,
+              null,
+              2,
+            )}
+          </pre>
+        </div>
+      )}
+    />
+  )
+}
+
 function App() {
   return (
     <RenduxProvider
-      initialState={{
-        toggleOn: true,
-        input: 'hello world',
-      }}
+      initialState={{on: true}}
       reducer={(state, action) => {
         switch (action.type) {
-          case 'input_change':
-            return {
-              ...state,
-              toggleOn:
-                action.value === 'on'
-                  ? true
-                  : action.value === 'off'
-                    ? false
-                    : state.toggleOn,
-              input: action.value,
-            }
           case 'toggle':
             return {
               ...state,
-              toggleOn: !state.toggleOn,
+              on: action.value,
+            }
+          case 'input_change':
+            return {
+              ...state,
+              inputValue: action.value,
             }
           default:
             return state
@@ -234,39 +299,9 @@ function App() {
       }}
     >
       <UpdateBlocker>
-        <RenduxController
-          render={({state, dispatch}) => (
-            <div>
-              <input
-                defaultValue={state.input}
-                placeholder="Type 'off' or 'on'"
-                onChange={event =>
-                  dispatch({
-                    type: 'input_change',
-                    value: event.target.value,
-                  })}
-              />
-              <div
-                style={{
-                  marginTop: 20,
-                  marginBottom: 20,
-                }}
-              >
-                <Switch
-                  on={state.toggleOn}
-                  onClick={() =>
-                    dispatch({type: 'toggle'})}
-                />
-              </div>
-              <div style={{textAlign: 'left'}}>
-                state:
-                <pre>
-                  {JSON.stringify(state, null, 2)}
-                </pre>
-              </div>
-            </div>
-          )}
-        />
+        <MyInput />
+        <MySwitch />
+        <StatePrinter />
       </UpdateBlocker>
     </RenduxProvider>
   )
@@ -283,15 +318,15 @@ function App() {
 
 function Switch({on, className = '', ...props}) {
   return (
-    <div className="toggle">
+    <div className="rendux">
       <input
-        className="toggle-input"
+        className="rendux-input"
         type="checkbox"
       />
       <button
-        className={`${className} toggle-btn ${on
-          ? 'toggle-btn-on'
-          : 'toggle-btn-off'}`}
+        className={`${className} rendux-btn ${on
+          ? 'rendux-btn-on'
+          : 'rendux-btn-off'}`}
         {...props}
       />
     </div>
